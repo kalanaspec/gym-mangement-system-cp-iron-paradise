@@ -1,0 +1,22 @@
+# Systemd Service File Example
+# Save this as /etc/systemd/system/gym-management.service
+# Then run: sudo systemctl enable gym-management && sudo systemctl start gym-management
+
+[Unit]
+Description=Gym Management System Spring Boot Application
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/path/to/your/app
+ExecStart=/usr/bin/java -jar -Dspring.profiles.active=prod /path/to/your/app/management-system-0.0.1-SNAPSHOT.jar
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=gym-management
+
+[Install]
+WantedBy=multi-user.target
+
