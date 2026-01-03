@@ -4,6 +4,7 @@ import com.gym.management.security.JwtAuthorizationFilter;
 import com.gym.management.security.JwtUtil;
 import com.gym.management.repository.UserRepository;
 import com.gym.management.entity.Users;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -33,6 +34,8 @@ public class SecurityConfig {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     public SecurityConfig(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
@@ -54,11 +57,12 @@ public class SecurityConfig {
         return http.build();
     }
 
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // When credentials are enabled, use specific origins (not wildcard)
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        configuration.setAllowedOrigins(Arrays.asList(frontendUrl));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
