@@ -52,15 +52,19 @@ public class MemberService {
     }
 
     public Members createMember(AddMemberDto dto) {
-        // Check if username already exists
-        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Username already exists: " + dto.getUsername());
+        // Check if email already exists
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already exists: " + dto.getEmail());
         }
 
-        // Create user first
+        // Generate admission number (format: ADM + year + sequential number)
+        String admissionNumber = generateAdmissionNumber();
+
+        // Create user without username/password (members don't have login credentials)
         Users user = new Users();
-        user.setUsername(dto.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+        user.setUsername(null); // No username for admin-created members
+        // Set empty password hash (cannot be null due to database constraint)
+        user.setPasswordHash(""); // Empty password for admin-created members (they can't login)
         user.setRole("member");
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
@@ -69,6 +73,7 @@ public class MemberService {
         // Create member record
         Members member = new Members();
         member.setUser(user);
+        member.setAdmissionNumber(admissionNumber);
         member.setAddress(dto.getAddress());
         member.setDateOfBirth(dto.getDateOfBirth());
         member.setHeight(dto.getHeight());
@@ -109,6 +114,13 @@ public class MemberService {
         }
 
         return memberRepository.save(member);
+    }
+
+    private String generateAdmissionNumber() {
+        int currentYear = LocalDateTime.now().getYear();
+        long memberCount = memberRepository.count();
+        // Format: ADM + YYYY + sequential number (e.g., ADM202601, ADM202602)
+        return String.format("ADM%d%04d", currentYear, memberCount + 1);
     }
 
     @Transactional

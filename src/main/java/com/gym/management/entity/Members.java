@@ -15,6 +15,9 @@ public class Members {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberId;
 
+    @Column(unique = true)
+    private String admissionNumber;
+
     @OneToOne
     @JoinColumn(name = "user_id")
     private Users user;
