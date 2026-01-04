@@ -227,5 +227,58 @@ public class ReportsService {
         dto.setDuration("N/A"); // Not tracked
         return dto;
     }
+
+    /**
+     * Calculate daily revenue for a specific day of the week
+     * @param dayOfWeek 1=Monday, 2=Tuesday, ..., 7=Sunday
+     * @return Total revenue for members who paid on that day of week (any week)
+     */
+    public BigDecimal getDailyRevenue(int dayOfWeek) {
+        List<Members> allMembers = memberRepository.findAll();
+        
+        return allMembers.stream()
+            .filter(m -> "PAID".equalsIgnoreCase(m.getPaymentStatus()))
+            .filter(m -> m.getLastPaymentDate() != null)
+            .filter(m -> m.getLastPaymentDate().getDayOfWeek().getValue() == dayOfWeek)
+            .filter(m -> m.getPaymentAmount() != null)
+            .map(Members::getPaymentAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculate monthly revenue for a specific month and year
+     * @param year The year (e.g., 2026)
+     * @param month The month (1-12)
+     * @return Total revenue for members who paid in that month/year
+     */
+    public BigDecimal getMonthlyRevenue(int year, int month) {
+        List<Members> allMembers = memberRepository.findAll();
+        
+        return allMembers.stream()
+            .filter(m -> "PAID".equalsIgnoreCase(m.getPaymentStatus()))
+            .filter(m -> m.getLastPaymentDate() != null)
+            .filter(m -> m.getLastPaymentDate().getYear() == year)
+            .filter(m -> m.getLastPaymentDate().getMonthValue() == month)
+            .filter(m -> m.getPaymentAmount() != null)
+            .map(Members::getPaymentAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculate yearly revenue for a specific year
+     * @param year The year (e.g., 2026)
+     * @return Total revenue for members who paid in that year
+     */
+    public BigDecimal getYearlyRevenue(int year) {
+        List<Members> allMembers = memberRepository.findAll();
+        
+        return allMembers.stream()
+            .filter(m -> "PAID".equalsIgnoreCase(m.getPaymentStatus()))
+            .filter(m -> m.getLastPaymentDate() != null)
+            .filter(m -> m.getLastPaymentDate().getYear() == year)
+            .filter(m -> m.getPaymentAmount() != null)
+            .map(Members::getPaymentAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }
 

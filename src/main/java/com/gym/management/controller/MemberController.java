@@ -82,6 +82,21 @@ public class MemberController {
         }
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateMember(@PathVariable Long id, @RequestBody AddMemberDto dto) {
+        try {
+            Members member = memberService.updateMember(id, dto);
+            return ResponseEntity.ok(member);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "Error updating member: " + e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteMember(@PathVariable Long id) {

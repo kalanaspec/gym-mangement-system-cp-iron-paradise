@@ -179,5 +179,71 @@ public class MemberService {
         
         return memberRepository.save(member);
     }
+
+    @Transactional
+    public Members updateMember(Long id, AddMemberDto dto) {
+        Members member = memberRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Member not found with id: " + id));
+
+        Users user = member.getUser();
+        
+        // Check if email is being changed and if the new email already exists
+        if (!user.getEmail().equals(dto.getEmail())) {
+            if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+                throw new IllegalArgumentException("Email already exists: " + dto.getEmail());
+            }
+        }
+
+        // Update user fields
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user = userRepository.save(user);
+
+        // Update member fields
+        member.setAddress(dto.getAddress());
+        member.setDateOfBirth(dto.getDateOfBirth());
+        member.setHeight(dto.getHeight());
+        member.setWeight(dto.getWeight());
+        member.setGender(dto.getGender());
+        member.setPhoneNumber(dto.getPhoneNumber());
+
+        // Update payment information if provided
+        if (dto.getPaymentStatus() != null && !dto.getPaymentStatus().isEmpty()) {
+            member.setPaymentStatus(dto.getPaymentStatus());
+        }
+        
+        if (dto.getPaymentPlanType() != null) {
+            member.setPaymentPlanType(dto.getPaymentPlanType());
+        }
+        
+        if (dto.getPaymentAmount() != null) {
+            member.setPaymentAmount(dto.getPaymentAmount());
+        }
+        
+        // If payment status is being updated to PAID, update payment dates
+        // Only update dates if payment status was provided in the DTO
+        if (dto.getPaymentStatus() != null && !dto.getPaymentStatus().isEmpty()) {
+            String paymentStatus = dto.getPaymentStatus();
+            if ("PAID".equalsIgnoreCase(paymentStatus)) {
+                LocalDateTime now = LocalDateTime.now();
+                member.setLastPaymentDate(now);
+                
+                String planType = member.getPaymentPlanType();
+                if (planType != null) {
+                    if ("YEARLY".equalsIgnoreCase(planType)) {
+                        member.setNextPaymentDate(now.plusYears(1));
+                    } else if ("MONTHLY".equalsIgnoreCase(planType)) {
+                        member.setNextPaymentDate(now.plusMonths(1));
+                    }
+                }
+            } else {
+                // For UNPAID or other statuses, clear payment dates
+                member.setLastPaymentDate(null);
+                member.setNextPaymentDate(null);
+            }
+        }
+
+        return memberRepository.save(member);
+    }
 }
 

@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -70,6 +72,28 @@ public class AuthService {
         var claims = new HashMap<String, Object>();
         claims.put("roles", "ROLE_MEMBER");
         return jwtUtil.generateToken(username, claims, 1000L * 60 * 60 * 24);
+    }
+
+    public List<Users> getAllAdmins() {
+        return userRepository.findByRole("admin");
+    }
+
+    @Transactional
+    public void deleteAdmin(Long userId, String currentUsername) {
+        Users user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("Admin not found with id: " + userId));
+        
+        // Check if user is an admin
+        if (!"admin".equalsIgnoreCase(user.getRole())) {
+            throw new IllegalArgumentException("User is not an admin: " + userId);
+        }
+        
+        // Prevent self-deletion
+        if (user.getUsername() != null && user.getUsername().equals(currentUsername)) {
+            throw new IllegalArgumentException("Cannot delete your own admin account");
+        }
+        
+        userRepository.delete(user);
     }
 }
 
