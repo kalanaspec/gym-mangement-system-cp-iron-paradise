@@ -62,7 +62,7 @@ public class MemberService {
 
         // Create user without username/password (members don't have login credentials)
         Users user = new Users();
-        user.setUsername(null); // No username for admin-created members
+        user.setUsername("null"); // No username for admin-created members
         // Set empty password hash (cannot be null due to database constraint)
         user.setPasswordHash(""); // Empty password for admin-created members (they can't login)
         user.setRole("member");
