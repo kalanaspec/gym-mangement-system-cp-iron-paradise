@@ -61,8 +61,10 @@ public class MemberService {
         String admissionNumber = generateAdmissionNumber();
 
         // Create user without username/password (members don't have login credentials)
+        // Use admission number as username to satisfy NOT NULL constraint
+        // They still can't login because password is empty
         Users user = new Users();
-        user.setUsername("null"); // No username for admin-created members
+        user.setUsername(admissionNumber); // Use admission number as username (satisfies NOT NULL constraint)
         // Set empty password hash (cannot be null due to database constraint)
         user.setPasswordHash(""); // Empty password for admin-created members (they can't login)
         user.setRole("member");
