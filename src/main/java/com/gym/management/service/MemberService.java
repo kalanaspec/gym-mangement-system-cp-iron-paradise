@@ -5,8 +5,12 @@ import com.gym.management.entity.Members;
 import com.gym.management.entity.Users;
 import com.gym.management.repository.MemberRepository;
 import com.gym.management.repository.UserRepository;
+import com.gym.management.repository.AttendanceRepository;
+import com.gym.management.repository.PaymentRepository;
+import com.gym.management.repository.MealPlanRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,11 +21,18 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AttendanceRepository attendanceRepository;
+    private final PaymentRepository paymentRepository;
+    private final MealPlanRepository mealPlanRepository;
 
-    public MemberService(MemberRepository memberRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public MemberService(MemberRepository memberRepository, UserRepository userRepository, PasswordEncoder passwordEncoder,
+                         AttendanceRepository attendanceRepository, PaymentRepository paymentRepository, MealPlanRepository mealPlanRepository) {
         this.memberRepository = memberRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.attendanceRepository = attendanceRepository;
+        this.paymentRepository = paymentRepository;
+        this.mealPlanRepository = mealPlanRepository;
     }
 
     public List<Members> findAll() {
@@ -98,6 +109,33 @@ public class MemberService {
         }
 
         return memberRepository.save(member);
+    }
+
+    @Transactional
+    public void deleteMember(Long id) {
+        Members member = memberRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Member not found with id: " + id));
+        
+        // Get user reference before deleting member
+        Users user = member.getUser();
+        
+        // Delete all related records first (to avoid foreign key constraint violations)
+        // Delete attendance records
+        attendanceRepository.deleteByMember(member);
+        
+        // Delete payment records
+        paymentRepository.deleteByMember(member);
+        
+        // Delete meal plan records
+        mealPlanRepository.deleteByMember(member);
+        
+        // Delete the member record (this removes the foreign key reference)
+        memberRepository.delete(member);
+        
+        // Delete the associated user record
+        if (user != null) {
+            userRepository.delete(user);
+        }
     }
 
     public Members updateMemberPayment(Long id, String paymentStatus, String planType, BigDecimal amount) {
