@@ -44,6 +44,27 @@ public class AuthService {
         memberRepository.save(member);
     }
 
+    @Transactional
+    public void registerAdmin(AuthDtos.RegisterRequest req) {
+        // Check if username already exists
+        if (userRepository.findByUsername(req.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists: " + req.getUsername());
+        }
+        
+        // Check if email already exists
+        if (userRepository.findByEmail(req.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already exists: " + req.getEmail());
+        }
+        
+        Users user = new Users();
+        user.setUsername(req.getUsername());
+        user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        user.setRole("admin");
+        user.setName(req.getName());
+        user.setEmail(req.getEmail());
+        userRepository.save(user);
+    }
+
     public String login(String username) {
         // this method assumes authentication is already done by provider; we just create token
         var claims = new HashMap<String, Object>();

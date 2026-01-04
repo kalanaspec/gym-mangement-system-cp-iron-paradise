@@ -11,10 +11,10 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String passwordHash;
 
     @Column(nullable = false)

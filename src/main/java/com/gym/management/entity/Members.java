@@ -23,6 +23,8 @@ public class Members {
     private LocalDate dateOfBirth;
     private Double height;
     private Double weight;
+    private String gender;
+    private String phoneNumber;
     private LocalDateTime registrationDate;
     private String status; // pending, active, inactive
     
